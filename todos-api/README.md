@@ -6,7 +6,7 @@ sending appropriate message to a Redis queue. The messages are then processed by
 `log-message-processor`.
 
 ## Prerequisites
-- node:8
+- node:14-alpine
 
 ## Configuration
 

@@ -3,7 +3,7 @@
 UI for sample distributed TODO app build with VueJS
 
 ## requirements
-- node:14
+- node:12
 
 ## ENV Configuration
 - `PORT` - a port the application binds to
