@@ -1,0 +1,60 @@
+---
+
+services:
+  auth-api:
+    build:
+      context: ./auth-api
+      dockerfile: Dockerfile
+    container_name: auth-api_container
+    ports:
+      - "8081:8081"
+    environment:
+      - AUTH_API_PORT=8081
+      - JWT_SECRET=myfancysecret
+      - USERS_API_ADDRESS=http://users-api:8083
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend_container
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - AUTH_API_ADDRESS=http://auth-api:8081
+      - TODOS_API_ADDRESS=http://todos-api:8082
+
+  log-message-processor:
+    build:
+      context: ./log-message-processor
+      dockerfile: Dockerfile
+    container_name: log_message_processor_container
+    environment:
+      - REDIS_HOST=redis-queue
+      - REDIS_PORT=6379
+      - REDIS_CHANNEL=log_channel
+
+  todos-api:
+    build:
+      context: ./todos-api
+      dockerfile: Dockerfile
+    container_name: todos-api_container
+    ports:
+      - "6379:80"
+    environment:
+      - JWT_SECRET=myfancysecret
+      - REDIS_HOST=redis-queue
+      - REDIS_PORT=6379
+      - REDIS_CHANNEL=log_channel
+    
+  users-api:
+    build:
+      context: ./users-api
+      dockerfile: Dockerfile
+    container_name: users-api_container
+    ports:
+      - "8083:80"
+    environment:
+      - SERVER_PORT=8083
+      - JWT_SECRET=myfancysecret
