@@ -1,17 +1,13 @@
-FROM golang:1.24
-
-#Working directory
+# Multi-stage build for Go service
+FROM golang:1.23 AS builder
 WORKDIR /auth-api
-
-#Install Dependencies
 COPY go.mod go.sum ./
 RUN go mod download
-
 COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o auth-api .
 
-#Build the binary
-RUN go build -o /auth-api .
-
+FROM alpine:latest
+WORKDIR /auth-api
+COPY --from=builder /auth-api/auth-api .
 EXPOSE 8081
-
-ENTRYPOINT [ "/auth-api" ]
+CMD ["./auth-api"]

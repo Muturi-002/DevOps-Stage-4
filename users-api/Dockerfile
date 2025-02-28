@@ -10,14 +10,14 @@ COPY src ./src
 RUN mvn package -DskipTests
 
 # Reduce build time by using a smaller base image
-FROM openjdk:25-ea-jdk-slim
+FROM openjdk:8-jre-slim
 
 WORKDIR /users-api
 
 # Copy the built application JAR file from the first stage
-COPY --from=build /users-api/target/*.jar app.jar
+COPY --from=build /users-api/target/*.jar ./users-api.jar
 
 EXPOSE 8083
 
 # Define the command to run the application
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "users-api.jar"]
