@@ -2,27 +2,27 @@ services:
   traefik:
     image: "traefik:v3.3"
     container_name: traefik_container
-    restart: unless-stopped
+    restart: never
     command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
-      - "--certificatesresolvers.myresolver.acme.email=mojoyodajojo@gmail.com"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "accesslog=true"
-      - "log-level=DEBUG"
-      - "--certi"
+      - "--api.insecure=true" # Enable insecure API access
+      - "--providers.docker=true" # Enable Docker provider
+      - "--entrypoints.web.address=:80" # Define entrypoint for HTTP
+      - "--entrypoints.websecure.address=:443" # Define entrypoint for HTTPS
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure" # Redirect HTTP to HTTPS
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https" # Use HTTPS scheme for redirection
+      - "--certificatesresolvers.myresolver.acme.email=mojoyodajojo@gmail.com" # Email for ACME certificate resolver
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json" # Storage location for ACME certificates
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true" # Enable TLS challenge for ACME
+      - "accesslog=true" # Enable access logs
+      - "log-level=DEBUG" # Set log level to DEBUG
+      - "--certi" # Incomplete command, should be removed or completed
     ports:
-      - "80:80"
-      - "8080:8080"
-      - "443:443"
+      - "80:80" # Map port 80 for HTTP
+      - "8080:8080" # Map port 8080 for Traefik dashboard
+      - "443:443" # Map port 443 for HTTPS
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro" # Mount Docker socket
+      - "./letsencrypt:/letsencrypt" # Mount directory for Let's Encrypt certificates
     
   auth-api:
     build:
@@ -39,8 +39,16 @@ services:
       - traefik
     labels:
       - "traefik_enabled=true"
-      - "traefik.http.routers.auth-api.rule=Host(`auth.2doapp-hng.cloud`)"
+      - "traefik.http.routers.authapi.rule=Host(`auth.2doapp-hng.cloud`)"
       - "traefik.http.services.myservice.loadbalancer.server.port=80"
+      - "traefik.http.routers.authapi-http.entrypoints=web"
+      - "traefik.http.routers.authapi-http.rule=Host(`auth.2doapp-hng.cloud`)"
+      - "traefik.http.routers.authapi-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.authapi-https.entrypoints=websecure"
+      - "traefik.http.routers.authapi-https.rule=Host(`auth.2doapp-hng.cloud`)"
+      - "traefik.http.routers.authapi-https.tls=true"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+
   frontend:
     build:
       context: ./frontend
@@ -57,8 +65,18 @@ services:
       - todos-api
       #- traefik
     labels:
-      - "trarfik_enabled=true"
+      - "traefik_enabled=true"
       - "traefik.http.routers.frontend.rule=Host(`2doapp-hng.cloud`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=8080"
+      - "traefik.http.routers.frontend-http.service=frontend"
+      - "traefik.http.routers.frontend-http.rule=Host(`2doapp-hng.cloud`)"
+      - "traefik.http.routers.frontend-http.entrypoints=web"
+      - "traefik.http.routers.frontend-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.frontend-https.service=frontend"
+      - "traefik.http.routers.frontend-https.rule=Host(`2doapp-hng.cloud`)"
+      - "traefik.http.routers.frontend-https.entrypoints=websecure"
+      - "traefik.http.routers.frontend-https.tls=true"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
 
   log-message-processor:
     build:
@@ -87,8 +105,18 @@ services:
     depends_on:
       - traefik
     labels:
-      - "trarfik_enabled=true"
-      - "traefik.http.routers.todos-api.rule=Host(`todos.2doapp-hng.cloud`)"
+      - "traefik_enabled=true"
+      - "traefik.http.routers.todosapi.rule=Host(`todos.2doapp-hng.cloud`)"
+      - "traefik.http.routers.todosapi-http.entrypoints=web"
+      - "traefik.http.routers.todosapi-http.rule=Host(`todos.2doapp-hng.cloud`)"
+      - "traefik.http.routers.todosapi-https.tls.certresolver=myresolver"
+      - "traefik.http.routers.todosapi-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.todosapi-https.entrypoints=websecure"
+      - "traefik.http.routers.todosapi-https.rule=Host(`todos.2doapp-hng.cloud`)"
+      - "traefik.http.routers.todosapi-https.tls=true"
+      - "traefik.http.routers.todosapi-http.middlewares=redirect-https"
+      - "traefik.http.middlewares.redirect-https.redirectScheme.scheme=https"
+      - "traefik.http.middlewares.redirect-https.redirectScheme.permanent=true"
     
   users-api:
     build:
@@ -103,5 +131,15 @@ services:
     depends_on:
       - traefik
     labels:
-      - "trarfik_enabled=true"
+      - "traefik_enabled=true"
       - "traefik.http.routers.users-api.rule=Host(`users.2doapp-hng.cloud`)"
+      - "traefik.http.routers.users-api-http.entrypoints=web"
+      - "traefik.http.routers.users-api-http.rule=Host(`users.2doapp-hng.cloud`)"
+      - "traefik.http.routers.users-api-https.tls.certresolver=myresolver"
+      - "traefik.http.routers.users-api-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.users-api-https.entrypoints=websecure"
+      - "traefik.http.routers.users-api-https.rule=Host(`users.2doapp-hng.cloud`)"
+      - "traefik.http.routers.users-api-https.tls=true"
+      - "traefik.http.routers.users-api-http.middlewares=redirect-https"
+      - "traefik.http.middlewares.redirect-https.redirectScheme.scheme=https"
+      - "traefik.http.middlewares.redirect-https.redirectScheme.permanent=true"
