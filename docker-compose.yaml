@@ -2,7 +2,7 @@ services:
   traefik:
     image: "traefik:v3.3"
     container_name: traefik_container
-    restart: never
+    restart: unless-stopped
     command:
       - "--api.insecure=true" # Enable insecure API access
       - "--providers.docker=true" # Enable Docker provider
