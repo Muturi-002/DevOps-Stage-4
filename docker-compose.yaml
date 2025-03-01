@@ -8,11 +8,14 @@ services:
       - "--providers.docker=true" # Enable Docker provider
       - "--entrypoints.web.address=:80" # Define entrypoint for HTTP
       - "--entrypoints.websecure.address=:443" # Define entrypoint for HTTPS
-      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure" # Redirect HTTP to HTTPS
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https" # Use HTTPS scheme for redirection
       - "--certificatesresolvers.myresolver.acme.email=mojoyodajojo@gmail.com" # Email for ACME certificate resolver
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json" # Storage location for ACME certificates
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true" # Enable TLS challenge for ACME
+      - "accesslog=true" # Enable access logs
+      - "log-level=DEBUG" # Set log level to DEBUG
+      - "--certi" # Incomplete command, should be removed or completed
     expose:
       - "8080"
     ports:
