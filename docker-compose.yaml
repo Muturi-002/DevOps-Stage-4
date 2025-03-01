@@ -16,9 +16,10 @@ services:
       - "accesslog=true" # Enable access logs
       - "log-level=DEBUG" # Set log level to DEBUG
       - "--certi" # Incomplete command, should be removed or completed
+    expose:
+      - "8080"
     ports:
       - "80:80" # Map port 80 for HTTP
-      - "8080:8080" # Map port 8080 for Traefik dashboard
       - "443:443" # Map port 443 for HTTPS
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro" # Mount Docker socket
